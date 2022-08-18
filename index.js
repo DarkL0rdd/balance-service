@@ -1,6 +1,10 @@
 import "dotenv/config";
 import express from "express";
 import mongoose from "mongoose";
+import { transactionRouter } from "../balance-service/src/routes/transaction.routes.js";
+import { userRouter } from "./src/routes/user.routes.js";
+import { errorHandler } from "../balance-service/src/middleware/error.handler.js";
+
 const app = express();
 const PORT = process.env.SERVER_PORT || 5000;
 
@@ -19,3 +23,7 @@ try {
 app.listen(PORT, () => {
   console.log(`Server is working on ${PORT} port`);
 });
+
+app.use("/balance", userRouter);
+app.use("/transaction", transactionRouter);
+app.use(errorHandler);
