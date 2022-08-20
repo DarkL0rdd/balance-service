@@ -14,10 +14,10 @@ export const transactionValidationSchema = [
     .withMessage("No spaces are allowed in user ID."),
 
   //type
-  body("type").not().isEmpty().withMessage("Transaction type is required"),
+  /*body("type").not().isEmpty().withMessage("Transaction type is required"),
   body("type").exists({ checkFalsy: true }).withMessage("Transaction type is required."),
   body("type").isString().withMessage("Transaction type must be a string."),
-  body("type").isIn(arrayType).withMessage("Transaction type error."),
+  body("type").isIn(arrayType).withMessage("Transaction type error."),*/
 
   //amount
   body("amount").not().isEmpty().withMessage("Transaction amount is required."),
