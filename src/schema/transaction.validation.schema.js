@@ -8,7 +8,8 @@ export const transactionValidationSchema = [
   body("id").isString().withMessage("User ID must be a string."),
   body("id")
     .custom((value) => {
-      !/\s/.test(value);
+      const regex = /^\S*$/;
+      if (regex.test(value)) return true;
     })
     .withMessage("No spaces are allowed in user ID."),
 
