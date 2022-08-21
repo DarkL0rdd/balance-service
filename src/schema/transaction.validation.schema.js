@@ -14,10 +14,21 @@ export const transactionValidationSchema = [
     .withMessage("No spaces are allowed in user ID."),
 
   //type
-  /*body("type").not().isEmpty().withMessage("Transaction type is required"),
+  body("type").not().isEmpty().withMessage("Transaction type is required"),
   body("type").exists({ checkFalsy: true }).withMessage("Transaction type is required."),
   body("type").isString().withMessage("Transaction type must be a string."),
-  body("type").isIn(arrayType).withMessage("Transaction type error."),*/
+  body("type").isIn(arrayType).withMessage("Transaction type error."),
+
+  //destination
+  body("destination").optional({ checkFalsy: false }).not().isEmpty().withMessage("Destination is required"),
+  body("destination").optional({ checkFalsy: false }).isString().withMessage("Destination ID must be a string."),
+  body("destination")
+    .optional({ checkFalsy: false })
+    .custom((value) => {
+      const regex = /^\S*$/;
+      if (regex.test(value)) return true;
+    })
+    .withMessage("No spaces are allowed in destination ID."),
 
   //amount
   body("amount").not().isEmpty().withMessage("Transaction amount is required."),
