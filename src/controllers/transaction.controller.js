@@ -1,13 +1,8 @@
-import {
-  increaseUserBalance,
-  decreaseUserBalance,
-  transferToAnotherUser,
-  getAllUserTransactions,
-} from "../services/transaction.service.js";
+import { updateUserBalance, transferToAnotherUser, getAllUserTransactions } from "../services/transaction.service.js";
 
 export const createAddTransaction = async (req, res, next) => {
   try {
-    await increaseUserBalance(req.body.id, req.body.type, req.body.amount);
+    await updateUserBalance(req.body.id, req.body.amount, req.body.type);
     res.status(200).json({ Message: `Your balance has been successfully topped up with ${req.body.amount}$.` });
   } catch (error) {
     next(error);
@@ -16,7 +11,7 @@ export const createAddTransaction = async (req, res, next) => {
 
 export const createReduceTransaction = async (req, res, next) => {
   try {
-    await decreaseUserBalance(req.body.id, req.body.type, req.body.amount);
+    await updateUserBalance(req.body.id, req.body.amount, req.body.type);
     res.status(200).json({ Message: `${req.body.amount}$ has been taken from your balance.` });
   } catch (error) {
     next(error);

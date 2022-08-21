@@ -8,58 +8,23 @@ const getSum = (total, currentValue) => {
   return total + currentValue.amount;
 };
 
-export const increaseUserBalance = async (userId, amountTransaction) => {
-  if (amountTransaction <= 0) throw new CustomError(400, "Replenishment amount must be greater than 0");
-
-  const replenishmentTransaction = await Transaction.create({
-    user: `${userId}`,
-    type: arrayType[0],
-    amount: amountTransaction,
-    status: arrayStatus[0],
-  });
-  if (!replenishmentTransaction) throw new CustomError(500, "Transaction create error.");
-
-  const user = await User.findOneAndUpdate(
-    {
-      _id: userId,
-    },
-    {
-      $push: { transactions: replenishmentTransaction },
-    }
-  );
-  if (!user) throw new CustomError(500, "User not found.");
-
-  const userOldBalance = user.balance;
-  const userNewBalance = userOldBalance + amountTransaction;
-
-  const updateUserBalance = await User.findByIdAndUpdate(userId, {
-    balance: userNewBalance,
-  });
-  if (!updateUserBalance) throw new CustomError(500, "Balance update error.");
-
-  if (userOldBalance !== userNewBalance) {
-    const userReplenishmentTransactionStatus = await Transaction.findByIdAndUpdate(replenishmentTransaction._id, {
-      status: arrayStatus[1],
-    });
-  } else {
-    const userReplenishmentTransactionStatus = await Transaction.findByIdAndUpdate(replenishmentTransaction._id, {
-      status: arrayStatus[2],
-    });
-    throw new CustomError(500, "Balance replenishment error.");
-  }
-};
-
-export const decreaseUserBalance = async (userId, amountTransaction) => {
-  if (amountTransaction <= 0) throw new CustomError(400, "Replenishment amount must be greater than 0");
+/**
+ * Increase or decrease user balance in data base.
+ * @param {string} userId user ID.
+ * @param {number} amountTransaction amount of transaction.
+ */
+export const updateUserBalance = async (userId, amountTransaction, typeTransacion) => {
+  if (amountTransaction <= 0) throw new CustomError(400, "Amount must be greater than 0");
 
   const user = await User.findById(userId);
   if (!user) throw new CustomError(500, "User not found.");
   const userOldBalance = user.balance;
-  if (userOldBalance < amountTransaction) throw new CustomError(400, "User balance is not enough.");
+  if (typeTransacion === arrayType[1] && userOldBalance < amountTransaction)
+    throw new CustomError(400, "User balance is not enough.");
 
   const transaction = await Transaction.create({
     user: `${userId}`,
-    type: arrayType[1],
+    type: typeTransacion,
     amount: amountTransaction,
     status: arrayStatus[0],
   });
@@ -69,14 +34,37 @@ export const decreaseUserBalance = async (userId, amountTransaction) => {
     $push: { transactions: transaction },
   });
 
-  const userNewBalance = userOldBalance - amountTransaction;
+  let userNewBalance = 0;
+  if (typeTransacion === arrayType[0]) {
+    userNewBalance = userOldBalance + amountTransaction;
+  }
+  if (typeTransacion === arrayType[1]) {
+    userNewBalance = userOldBalance - amountTransaction;
+  }
 
   const updateUserBalance = await User.findByIdAndUpdate(userId, {
     balance: userNewBalance,
   });
   if (!updateUserBalance) throw new CustomError(500, "Balance update error.");
+
+  if (userOldBalance !== userNewBalance) {
+    const userReplenishmentTransactionStatus = await Transaction.findByIdAndUpdate(transaction._id, {
+      status: arrayStatus[1],
+    });
+  } else {
+    const userReplenishmentTransactionStatus = await Transaction.findByIdAndUpdate(transaction._id, {
+      status: arrayStatus[2],
+    });
+    throw new CustomError(500, "Transaction rejected.");
+  }
 };
 
+/**
+ * Reduces the user's balance and transferring the balance to another user.
+ * @param {string} userId user ID
+ * @param {number} amountTransaction transaction amount
+ * @param {string} destinationId destination user ID
+ */
 export const transferToAnotherUser = async (userId, amountTransaction, destinationId) => {
   if (amountTransaction <= 0) throw new CustomError(400, "Transfer amount must be greater than 0");
 
@@ -149,6 +137,10 @@ export const transferToAnotherUser = async (userId, amountTransaction, destinati
   }
 };
 
+/**
+ * Find all user's transactions by ID in data base.
+ * @param {string} userId user ID.
+ */
 export const getAllUserTransactions = async (userId) => {
   const user = await User.findById(userId).populate("transactions");
   if (!user) throw new CustomError(500, "User not found.");
